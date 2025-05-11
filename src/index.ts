@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { connectDB } from "./config/mongodb";
 import inventoryRoutes from "./routes/inventory.routes"
+import customerRoutes from "./routes/customer.routes"
 import morgan from "morgan";
 import dotenv from "dotenv";
 dotenv.config();
@@ -17,6 +18,7 @@ app.get('/api', (req: Request, res: Response) => {
 })
 
 app.use('/api', inventoryRoutes);
+app.use('/api/customer', customerRoutes);
 
 connectDB();
 
