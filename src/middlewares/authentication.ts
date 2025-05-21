@@ -6,30 +6,30 @@ dotenv.config();
 
 export const authorization = async(req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const cookie = req.cookies?.['customerToken'];
+        const isAdminRoute = req.originalUrl.startsWith('/api/admin'); 
+        const cookieName = isAdminRoute ? 'adminToken' : 'customerToken'; //name cookie based on the 
+
+        const cookie = req.cookies?.[cookieName]; // cookie is set using the name of the token
         const authHeader = req.headers?.authorization;
 
-        const accessToken = cookie || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+        // assigning accessToken to authHeader or cookie, provided on what the application will be using
+        const accessToken = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null) || cookie ;
+        
 
         if(!accessToken){
-            res.status(400).json({
-                success: false,
-                message: 'Unauthorized: Access token not found'
-            });
+            res.status(400).json({success: false, message: 'Unauthorized: Access token not found'});
             return;
         }
 
         if(!process.env.JWT_SECRET){
-            res.status(400).json({
-                success: false,
-                message: 'jwt secret not set'
-            });
+            res.status(400).json({success: false,message: 'jwt secret not set'});
             return;
         }
 
-        const customerToken = jwt.verify(accessToken, process.env.JWT_SECRET) as {id: string, email: string};
+        //validating the access token
+        const userToken = jwt.verify(accessToken, process.env.JWT_SECRET) as {id: string,  role: string};
 
-        if(!customerToken || !customerToken.id){
+        if(!userToken || !userToken.id){
             res.status(400).json({
                 success: false,
                 message: 'Unauthorized: Invalid token payload'
@@ -37,7 +37,13 @@ export const authorization = async(req: Request, res: Response, next: NextFuncti
             return;
         }
 
-        (req as any).user = {id: customerToken.id};
+        // assign the req.user object to id, email, and role
+        (req as any).user = {
+            id: userToken.id, 
+            role: userToken.role
+        };
+        // const payloadData = (req as any).user
+        // console.log('Payload: ',payloadData)
         next();
         
     } catch (error) {

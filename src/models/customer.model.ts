@@ -1,6 +1,5 @@
 import mongoose, { Document, model, Schema } from "mongoose";
 
-
 interface ICardDetails {
     cardType: string,
     accountNumber: string,
@@ -9,12 +8,13 @@ interface ICardDetails {
 }
 
 export interface ICustomer extends Document {
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string,
-    cardDetails: ICardDetails,
+    firstName: string;
+    lastName: string
+    email: string;
+    password: string;
+    cardDetails: ICardDetails;
     productsPurchased: mongoose.Types.ObjectId[];
+    isMember: boolean;
 }
 
 const customerSchema = new Schema<ICustomer>({
@@ -58,7 +58,12 @@ const customerSchema = new Schema<ICustomer>({
     productsPurchased: [{
         type: Schema.Types.ObjectId,
         ref: "Product"
-    }]
+    }],
+    isMember: {
+        type: Boolean,
+        default: false,
+        required: true
+    }
     
 },{
     timestamps: true

@@ -1,6 +1,6 @@
 import {check} from "express-validator"
 
-export const customerLoginValidation = [
+export const loginValidation = [
     check('email')
     .notEmpty()
     .withMessage('email field must not be empty')

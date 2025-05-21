@@ -1,19 +1,89 @@
 import { Request, Response } from "express";
 import Product from "../models/inventory.model";
 import mongoose from "mongoose";
+import Admin from "../models/admin.model";
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 
-export const welcomeMessage = async( req: Request, res: Response): Promise<void> => {
+
+export const signUp = async(req: Request, res: Response): Promise<void> => {
+    const {firstName, lastName, email, password} = req.body;
     try {
-        
-        res.status(200).json({
-            success: true,
-            message: 'Welcome to the inventory management system'
+
+        const existingAdmin = await Admin.findOne({email});
+
+        if(existingAdmin){
+            res.status(403).json({success: false, message: 'Admin account already exists'});
+            return;
+        }
+
+        //hash the password;
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newAdmin = new Admin ({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword
         });
-        return;
+        await newAdmin.save();
+
+        const adminData = {...newAdmin.toObject(), password: undefined};
+
+        res.status(201).json({
+            success: true,
+            message: 'Admin account created successfully',
+            adminData
+        });
+        return
 
     } catch (error) {
-        console.error('Error caused by :', error);
-        res.status(500).json({success: false, message:'Internal server error while displaying welcome message'});
+        console.log("Error caused by :", error);
+        res.status(500).json({message: 'Internal server error occurred while '});
+        return;
+    }
+}
+
+export const login = async(req: Request, res: Response): Promise<void> => {
+    const {email, password} = req.body;
+    try {
+        const existingAdmin = await Admin.findOne({email});
+        if(!existingAdmin){
+            res.status(401).json({message: 'Admin account does not exist'});
+            return;
+        }
+
+        const isMatch = await bcrypt.compare(password, existingAdmin.password);
+        if(!isMatch){
+            res.status(400).json({message: 'Password is incorrect'});
+            return
+        }
+
+        if(!process.env.JWT_SECRET){
+            res.status(404).json({message: 'Jwt not found'});
+            return;
+        }
+        // token is in the form 'header.payload.signature'
+        const token = jwt.sign(
+            {id: existingAdmin._id, role: 'admin'}, // set the payload of the token
+            process.env.JWT_SECRET,
+            {expiresIn: '1d'}
+        );
+        
+        res.cookie('adminToken', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 *6 * 1000,
+            sameSite: 'strict'
+        });
+
+        const adminData = {...existingAdmin.toObject(), password: undefined};
+        res.status(200).json({message: 'Admin logged in successfully', adminData});
+        return;
+        
+    } catch (error) {
+        console.log("Error caused by: ", error);
+        res.status(500).json({message: 'Internal server error while logging in'});
         return;
     }
 }
@@ -135,10 +205,7 @@ export const deleteProduct = async(req: Request, res: Response): Promise<void> =
     try {
         const {id} = req.params
         if(!req.params){
-            res.status(404).json({
-                success: true,
-                message: 'Request parameter not specified'
-            })
+            res.status(404).json({success: true,message: 'Request parameter not specified'})
             return;
         }
         if(!mongoose.Types.ObjectId.isValid(id)){
@@ -226,10 +293,7 @@ export const getItemByQuery = async(req: Request, res: Response): Promise<void> 
 
         const products = await Product.find(query);
         if (!products|| products.length === 0){
-            res.status(404).json({
-                success: false,
-                message:'No products found'
-            })
+            res.status(404).json({ success: false,message:'No products found'})
             return;
         }
 

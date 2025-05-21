@@ -82,7 +82,7 @@ export const login = async (req: Request, res: Response) :Promise<void> => {
 
         //generate token
         const token = jwt.sign(
-            {id: customer._id},
+            {id: customer._id, role: 'customer'},
             process.env.JWT_SECRET,
             {expiresIn: '1d'}
         )
@@ -107,6 +107,30 @@ export const login = async (req: Request, res: Response) :Promise<void> => {
     } catch (error) {
         console.log("Error caused by: ", error);
         res.status(500).json({success: false, message: 'Internal server error while logging in'});
+        return;
+    }
+}
+
+export const getMyData = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.id;
+
+        if(!userId){
+            res.status(404).json({success: false, message: 'user Id not found'});
+            return;
+        }
+        const user = await Customer.findById(userId);
+        if(!user){
+            res.status(404).json({success: false, message: 'User not found'});
+            return;
+        }
+
+        res.status(200).json({success: true, message: 'User data retrieved successfully', user});
+        return;
+
+    } catch (error) {
+        console.log("Error caused by: ", error);
+        res.status(500).json({success: false, message: 'Internal server while retrieving user data'});
         return;
     }
 }
