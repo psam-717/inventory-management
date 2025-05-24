@@ -15,7 +15,6 @@ export const authorization = async(req: Request, res: Response, next: NextFuncti
         // assigning accessToken to authHeader or cookie, provided on what the application will be using
         const accessToken = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null) || cookie ;
         
-
         if(!accessToken){
             res.status(400).json({success: false, message: 'Unauthorized: Access token not found'});
             return;
@@ -37,7 +36,7 @@ export const authorization = async(req: Request, res: Response, next: NextFuncti
             return;
         }
 
-        // assign the req.user object to id, email, and role
+        // assign the req.user object to id and role
         (req as any).user = {
             id: userToken.id, 
             role: userToken.role
