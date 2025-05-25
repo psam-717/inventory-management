@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Product from "../models/inventory.model";
-import mongoose from "mongoose";
+import mongoose, { NumberExpression } from "mongoose";
 import Admin from "../models/admin.model";
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
@@ -128,6 +128,54 @@ export const addNewItem = async(req: Request, res: Response): Promise<void> => {
     } catch (error) {
         console.log("Error caused by: ", error);
         res.status(500).json({success: false, message: 'Internal server error caused while adding new item'});
+        return;
+    }
+}
+
+export const addToStock = async(req: Request, res: Response): Promise<void> => {
+    interface AddToStockBody {
+        name: string,
+        quantity: number
+    }
+    // name of the product must be provided alongside the stock to update
+    const {name, quantity} = req.body as AddToStockBody;
+    try {
+        //verify existence of product
+        const existingProduct = await Product.findOne({name});
+
+        if(!existingProduct){
+            res.status(404).json({success: false, message: 'product not found'});
+            return;
+        }
+    
+        // make sure quantity specified is an integer
+        if(typeof quantity !== 'number' || quantity < 0){
+            res.status(400).json({success: false, message: 'Quantity must be a number and must be at least one'});
+            return;
+        }
+
+        // increasing stock
+        const increasedStock = existingProduct.stock + quantity;
+
+        const updatedStock = await Product.findOneAndUpdate({name},
+            {$set: {stock: increasedStock}},
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        if (!updatedStock){
+            res.status(401).json({success: false, message: 'Failed to update stock'});
+            return;
+        }
+
+        res.status(200).json({success: true, message: 'Stock updated', data: updatedStock})
+
+
+    } catch (error) {
+        console.log('Error is caused by: ', error);
+        res.status(500).json({success: false, message: 'Internal server error while adding to stock'});
         return;
     }
 }
