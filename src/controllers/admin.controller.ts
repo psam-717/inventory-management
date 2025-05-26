@@ -174,7 +174,8 @@ export const addToStock = async(req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        res.status(200).json({success: true, message: 'Stock updated', data: updatedStock})
+        res.status(200).json({success: true, message: 'Stock updated', data: updatedStock});
+        return;
 
 
     } catch (error) {
