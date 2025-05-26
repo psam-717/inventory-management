@@ -254,6 +254,23 @@ export const getSingleProduct = async(req: Request, res: Response): Promise<void
     }
 }
 
+export const stockOfProducts = async(req: Request, res: Response): Promise<void> => {
+    try {
+        const products = await Product.find().select('name stock');
+        if(!products || products.length === 0){
+            res.status(404).json({success: false, message: 'No products found'});
+            return;
+        }
+
+        res.status(200).json({message: 'Products retrieved successfully', data: products});
+        return;
+    } catch (error) {
+        console.log('Error caused by: ', error);
+        res.status(500).json({success: false, message: 'Internal server error while retrieving stock of product'});
+        return;
+    }
+}
+
 export const deleteProduct = async(req: Request, res: Response): Promise<void> => {
     try {
         const {id} = req.params

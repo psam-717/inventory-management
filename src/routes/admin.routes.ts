@@ -7,7 +7,8 @@ import {
         getItemByQuery, 
         getSingleProduct, 
         login, 
-        signUp, 
+        signUp,
+        stockOfProducts, 
     } from "../controllers/admin.controller";
 import { validate } from "../validators/validateFields";
 import { addItemValidation } from "../validators/addItem.validation";
@@ -23,7 +24,8 @@ router.post('/signup', adminSignUpValidation, validate,signUp);
 router.post('/login', loginValidation, validate, login)
 router.post('/add-item',  addItemValidation, validate, addNewItem);
 router.put('/add-to-Stock', addToStockValidation, validate , authorization, isAdmin, addToStock)
-router.get('/get-all-items', authorization, isAdmin ,displayAllProduct)
+router.get('/get-all-items', authorization, isAdmin ,displayAllProduct);
+router.get('/product-stock', authorization, isAdmin, stockOfProducts)
 router.get('/get-single-item/:id', authorization, isAdmin,getSingleProduct)
 router.delete('/delete-item/:id', authorization, isAdmin,deleteProduct);
 router.get('/items', getItemByQuery);
