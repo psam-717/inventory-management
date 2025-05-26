@@ -147,6 +147,10 @@ export const addToStock = async(req: Request, res: Response): Promise<void> => {
             res.status(404).json({success: false, message: 'product not found'});
             return;
         }
+
+        if(!name || typeof name !== 'string'){
+            res.status(400).json({success: false, message: 'name of product must be a valid and not empty'})
+        }
     
         // make sure quantity specified is an integer
         if(typeof quantity !== 'number' || quantity < 0){
@@ -166,11 +170,12 @@ export const addToStock = async(req: Request, res: Response): Promise<void> => {
         );
 
         if (!updatedStock){
-            res.status(401).json({success: false, message: 'Failed to update stock'});
+            res.status(404).json({success: false, message: 'Failed to update stock'});
             return;
         }
 
-        res.status(200).json({success: true, message: 'Stock updated', data: updatedStock})
+        res.status(200).json({success: true, message: 'Stock updated', data: updatedStock});
+        return;
 
 
     } catch (error) {

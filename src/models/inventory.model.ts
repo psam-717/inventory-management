@@ -37,6 +37,7 @@ const ProductSchema = new Schema<IProduct>({
     },
     category: {
         type: String,
+        enum: Object.values(Categories),
         required: true,
     },
     price: {
@@ -45,7 +46,8 @@ const ProductSchema = new Schema<IProduct>({
     },
     stock: {
         type: Number,
-        required: true
+        required: true,
+        min: 0
     },
     discounts: [
         {
